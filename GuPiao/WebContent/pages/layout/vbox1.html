@@ -1,0 +1,77 @@
+<html>
+<head>
+    <title>VBox Layout</title>
+    <link rel="stylesheet" type="text/css" href="../shared/page.css" />
+
+    <!-- GC -->
+
+    <script type="text/javascript" src="../../pages/shared/include-ext.js"></script>
+
+    <style type="text/css">
+        html, body {
+            font: normal 12px verdana;
+            margin: 0;
+            padding: 0;
+            border: 0 none;
+        }
+        
+        .info {
+	   		 background-image:url(../shared/icons/fam/information.png);
+		}
+    </style>
+    <script type="text/javascript">
+        Ext.require('*');
+        Ext.onReady(function() {
+
+            Ext.create('Ext.Viewport', {
+                layout:'border',
+                items: [{
+                    id:'btns',
+                    region:'west',
+                    split:true,
+                    width:150,
+                    minWidth: 100,
+                    maxWidth: 250,
+                    layout: {
+                        type:'vbox',
+                        padding:'5',
+                        pack:'start',
+                        align:'center'
+                    },
+                    defaults:{
+                    	margin:'0 0 5 0'
+                    },
+                    items:[{
+                        xtype:'button',
+                        iconCls: 'info',
+                        text: 'Button 1'
+                    },{
+                        xtype:'image',
+                        src:'../shared/extjs/images/extanim32.gif'
+                    },{
+                        xtype:'button',
+                        text: 'Button 3'
+                    },{
+                        xtype:'button',
+                        text: 'Button 4'
+                    }]
+               },
+	               Ext.create('Ext.tab.Panel', {
+	               	id : 'mainTabs',
+	                   region: 'center', // a center region is ALWAYS required for border layout
+	                   deferredRender: false,
+	                   activeTab: 0,     // first tab initially active
+	                   items: [{
+	                       title: '»¶Ó­',
+	                       closable: true,
+	                       autoScroll: true
+	                   }]
+	               })
+               ]
+            });
+        });
+    </script>
+</head>
+<body>
+</body>
+</html>

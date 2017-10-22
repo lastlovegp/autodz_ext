@@ -1,0 +1,210 @@
+<html>
+<head>
+<title>Complex Layout</title>
+<!-- GC -->
+<style type="text/css">
+p {
+    margin:5px;
+}
+.settings {
+    background-image:url(../shared/icons/fam/folder_wrench.png);
+}
+.nav {
+    background-image:url(../shared/icons/fam/folder_go.png);
+}
+.info {
+    background-image:url(../shared/icons/fam/information.png);
+}
+</style>
+<script type="text/javascript" src="../../pages/shared/include-ext.js"></script>
+<script type="text/javascript" src="../../pages/shared/options-toolbar.js"></script>
+<script type="text/javascript">
+	Ext.Loader.setConfig({
+	    enabled: true
+	});
+    Ext.require(['*']);
+    Ext.Loader.setPath('Ext.ux', '../ux');
+    
+    Ext.onReady(function() {
+
+        Ext.QuickTips.init();
+
+        //Ext.state.Manager.setProvider(Ext.create('Ext.state.CookieProvider'));
+        
+	    var tree = Ext.create('Ext.tree.Panel', {
+				rootVisible : false,
+				lines : false,
+				border :false,
+	    		height: 500,
+				useArrows : true,
+				root : {
+					expanded : true,
+					children : [{
+								text : "Panels",
+								expanded : true,
+								children : [{
+											id : "basic-panels",
+											text : "Basic Panel",
+											leaf : true
+										}, {
+											id : "framed-panels",
+											text : "Framed Panel",
+											leaf : true
+										}]
+							}, {
+								text : "Grids",
+								expanded : true,
+								children : [{
+											id : "array-grid",
+											text : "Array Grid",
+											leaf : true
+										}, {
+											id : "grouped-grid",
+											text : "Grouped Grid",
+											leaf : true
+										}]
+							}]}
+	    });
+		 
+		
+        var viewport = Ext.create('Ext.Viewport', {
+            id: 'border-example',
+            layout: 'border',
+            items: [
+            Ext.create('Ext.Component', {
+                region: 'north',
+                height: 32, // give north and south regions a height
+                autoEl: {
+                    tag: 'div',
+                    html:'<p>north - generally for menus, toolbars and/or advertisements</p>'
+                }
+            }), {
+                // lazily created panel (xtype:'panel' is default)
+                region: 'south',
+                contentEl: 'south',
+                split: true,
+                height: 100,
+                minSize: 100,
+                maxSize: 200,
+                collapsible: true,
+                collapsed: true,
+                title: 'South',
+                margins: '0 0 0 0'
+            }, {
+                xtype: 'tabpanel',
+                region: 'east',
+                title: '设置',
+                dockedItems: [{
+                    dock: 'top',
+                    xtype: 'toolbar',
+                    items: [ '->', {
+                       xtype: 'button',
+                       text: '测试',
+                       tooltip: 'Test Button'
+                    }]
+                }],
+                animCollapse: true,
+                collapsible: true,
+                split: true,
+                width: 225, // give east and west regions a width
+                minSize: 175,
+                maxSize: 400,
+                margins: '0 5 0 0',
+                activeTab: 1,
+                tabPosition: 'bottom',
+                items: [{
+                    html: '<p>A TabPanel component can be a region.</p>',
+                    title: 'A Tab',
+                    autoScroll: true
+                }, Ext.create('Ext.grid.PropertyGrid', {
+                        title: '属性设置',
+                        closable: true,
+                        source: {
+                            "(name)": "Properties Grid",
+                            "grouping": false,
+                            "autoFitColumns": true,
+                            "productionQuality": false,
+                            "created": Ext.Date.parse('10/15/2006', 'm/d/Y'),
+                            "tested": false,
+                            "version": 0.01,
+                            "borderWidth": 1
+                        }
+                    })]
+            }, {
+                region: 'west',
+                stateId: 'navigation-panel',
+                id: 'west-panel', // see Ext.getCmp() below
+                title: '菜单',
+                split: true,
+                width: 200,
+                minWidth: 175,
+                maxWidth: 400,
+                collapsible: true,
+                animCollapse: true,
+                margins: '0 0 0 5',
+                layout: 'accordion',
+                items: [{
+                    contentEl: 'west',
+                    title: '链接',
+                    iconCls: 'nav' // see the HEAD section for style used
+                }, {
+                    title: '设置',
+                    items : [ tree],
+                    iconCls: 'settings'
+                }, {
+                    title: '信息',
+                    html: '<p>Some info in here.</p>',
+                    iconCls: 'info'
+                }]
+            },
+            // in this instance the TabPanel is not wrapped by another panel
+            // since no title is needed, this Panel is added directly
+            // as a Container
+            Ext.create('Ext.tab.Panel', {
+                region: 'center', // a center region is ALWAYS required for border layout
+                deferredRender: false,
+                activeTab: 0,     // first tab initially active
+                items: [{
+                    contentEl: 'center1',
+                    title: '关闭我',
+                    closable: true,
+                    autoScroll: true
+                }, {
+                    contentEl: 'center2',
+                    title: 'Center Panel',
+                    autoScroll: true
+                }]
+            })]
+        });
+        // get a reference to the HTML element with id "hideit" and add a click listener to it
+        Ext.get("hideit").on('click', function(){
+            // get a reference to the Panel that was created with id = 'west-panel'
+            var w = Ext.getCmp('west-panel');
+            // expand or collapse that Panel based on its collapsed property state
+            w.collapsed ? w.expand() : w.collapse();
+        });
+    });
+    </script>
+</head>
+<body>
+    <!-- use class="x-hide-display" to prevent a brief flicker of the content -->
+    <div id="west" class="x-hide-display" align="center">
+        <p> <a id="hideit" href="#">menu1</a></p>
+        <p> <a id="hideit" href="#">menu2</a></p>
+        <p> <a id="hideit" href="#">menu3</a></p>
+        <p> <a id="hideit" href="#">menu4</a></p>
+    </div>
+    <div id="center2" class="x-hide-display">
+        <a id="hideit" href="#">Toggle the west region</a>
+        <p>center2</p>
+    </div>
+    <div id="center1" class="x-hide-display">
+        <p><b>center1</b></p>
+    </div>
+    <div id="props-panel" class="x-hide-display" style="width:200px;height:200px;overflow:hidden;">
+    </div>
+    <div id="south" class="x-hide-display">
+        <p>south - generally for informational stuff, also could be for status bar</p>
+    </div>
+</body>
+</html>

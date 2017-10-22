@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+	<table name="eacode" catalog="erp"></table>
+	<table name="eadept" catalog="erp"></table>
+	<table name="eaevent" catalog="erp"></table>
+	<table name="ea_demo_byjsb" catalog="erp"></table>
+</hibernate-reverse-engineering>

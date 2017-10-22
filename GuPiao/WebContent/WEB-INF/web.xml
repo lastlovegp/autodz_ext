@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+	http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+
+	<display-name>CallSell</display-name>
+
+	<!-- 配置Log4j -->
+	<context-param>
+		<param-name>log4jConfigLocation</param-name>
+		<param-value>classpath:log4j.properties</param-value>
+	</context-param>
+	<listener>
+		<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+	</listener>
+
+	<!-- 配置编码过滤器 -->
+	<filter>
+		<filter-name>characterEncodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>characterEncodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+
+	<!-- 加载Spring监听器 -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:application*.xml</param-value>
+	</context-param>
+
+	<!--配置缓存清除监听器 处理由 JavaBean Introspector功能而引起的缓存泄露 -->
+	<listener>
+		<listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
+	</listener>
+
+	<listener>
+		<listener-class>com.erp.framework.util.SystemInitListener</listener-class>
+	</listener>
+
+	<!-- 会话监听器 -->
+	<!--listener>
+		<listener-class>com.erp.framework.util.SessionListener</listener-class>
+	</listener>-->
+
+	<!-- 设置Session时长:以分钟为单位;如果是零或负数,那么会话就永远不会超时。 -->
+	<session-config>
+		<session-timeout>30</session-timeout>
+	</session-config>
+	
+	
+	<!-- 配置请求转发 smp与smp-servlet名称前缀一致-->
+	<servlet>
+		<servlet-name>smp-servlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+		<init-param>
+			<description>spring mvc 配置文件</description>
+			<param-name>contextConfigLocation</param-name>
+			
+			  <param-value>  
+		          classpath:applicationContext.xml,  
+		          classpath:applicationBiz.xml  
+		      </param-value>  
+		</init-param>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>smp-servlet</servlet-name>
+		<url-pattern>/rest/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- 电话 -->
+	<servlet>
+		<servlet-name>callServlet</servlet-name>
+		<servlet-class>com.erp.webcall.auth.controller.CallBackController</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>callServlet</servlet-name>
+		<url-pattern>/call</url-pattern>
+	</servlet-mapping>
+	
+
+	<!-- 
+		<servlet>
+			<servlet-name>taobaoServlet</servlet-name>
+			<servlet-class>com.erp.webcall.auth.controller.TaobaoServlet</servlet-class>
+		</servlet>
+		<servlet-mapping>
+			<servlet-name>taobaoServlet</servlet-name>
+			<url-pattern>/yitong</url-pattern>
+		</servlet-mapping>-->
+
+	<!-- 微信 -->
+	<servlet>
+		<servlet-name>weixinServlet</servlet-name>
+		<servlet-class>com.erp.controller.WeixinServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>weixinServlet</servlet-name>
+		<url-pattern>/weixin</url-pattern>
+	</servlet-mapping> 
+
+
+	<!--配置Struts2过滤器 -->
+	<filter>
+		<filter-name>struts2</filter-name>
+		<filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+		<load-on-startup>2</load-on-startup>
+	</filter>
+	<filter-mapping>
+		<filter-name>struts2</filter-name>
+		<url-pattern>*.do</url-pattern>
+	</filter-mapping>
+	
+
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+	</welcome-file-list>
+
+	
+
+</web-app>

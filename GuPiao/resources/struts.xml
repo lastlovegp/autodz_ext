@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="GBK"?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+	"http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+
+	<constant name="struts.objectFactory" value="spring" />
+	<constant name="struts.multipart.saveDir" value="/upload"></constant>
+	<constant name="struts.multipart.maxSize" value="1024102400"></constant>
+
+	<package name="erp" extends="struts-default,jasperreports-default">
+
+		<interceptors>
+			<interceptor name="erpAuthentication"
+				class="com.base.common.interceptor.AuthenticationInterceptor" />
+
+			<interceptor-stack name="erpAuthenticationStack">
+				<interceptor-ref name="erpAuthentication" />
+			</interceptor-stack>
+		</interceptors>
+
+		<global-results>
+			<result name="login">/sign.html</result>
+		</global-results>
+		
+
+		<action name="loginInit" class="loginAction" method="loginInit">
+			<interceptor-ref name="erpAuthenticationStack"></interceptor-ref>
+			<result type="freemarker" name="success">/pages/base/main.ftl</result>
+		</action>
+		
+		<action name="sign" class="loginAction" method="sign">
+			<result name="success">/sign.html</result>
+			<result type="freemarker" name="main">/pages/base/main.ftl</result>
+		</action>
+
+		<action name="loginOut" class="loginAction" method="loginOut">
+			<result name="success">/sign.html</result>
+		</action>
+				
+		<action name="loginCheck" class="loginAction" method="loginCheck">
+		</action>
+		
+
+		<action name="*_*_*" class="{2}Action" method="{1}">
+			<param name="savePath">/upload</param>
+			
+			<!-- 单个文件允许的大小 -->
+			<!--允许上传的文件类型,可以到%Tomcat_home%/conf下的web.xml文件中找到所有文件类型的类型名 -->
+			<!-- 
+			<interceptor-ref name="fileUpload">
+				<param name="maxinumSize">10240000000</param>
+				<param name="allowedTypesSet">application/zip,application/xls,application/pdf,image/gif,image/png,image/jpg</param>
+			</interceptor-ref>-->
+			
+			<interceptor-ref name="defaultStack"></interceptor-ref>
+			<interceptor-ref name="erpAuthenticationStack"></interceptor-ref>
+			<result type="freemarker" name="success">/pages/{3}/{1}.ftl</result>
+		</action>
+
+
+	</package>
+</struts>

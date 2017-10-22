@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="beanReport" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="43416f70-958c-4a75-b515-e00b0357b3b5">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="code" class="java.lang.String">
+		<fieldDescription><![CDATA[code]]></fieldDescription>
+	</field>
+	<field name="codedesc" class="java.lang.String">
+		<fieldDescription><![CDATA[codedesc]]></fieldDescription>
+	</field>
+	<field name="codeid" class="java.lang.String">
+		<fieldDescription><![CDATA[codeid]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="79" splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="61" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="87e69e5b-6b2c-4b61-be75-736344d36646" x="37" y="22" width="117" height="20"/>
+				<textElement/>
+				<text><![CDATA[code11]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="95a05040-a26f-4974-ae45-d13e8f56a113" x="252" y="22" width="118" height="20"/>
+				<textElement/>
+				<text><![CDATA[codedesc]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e25ce293-90d3-44c3-9e99-6de3e7f9175d" x="414" y="22" width="126" height="20"/>
+				<textElement/>
+				<text><![CDATA[codeid]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="125" splitType="Stretch">
+			<textField>
+				<reportElement uuid="92a9b47f-0b66-4e62-b81f-1bab81a5a89e" x="37" y="40" width="132" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{code}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="6d01cdc4-a3f2-45f2-91a2-7bcea1fa1a30" x="201" y="40" width="96" height="20"/>
+				<textElement>
+					<font fontName="宋体" pdfFontName="STSong-Light" pdfEncoding="UniGB-UCS2-H" isPdfEmbedded="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{codedesc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="6ded700e-35e4-4bb7-82e7-bc08fcb91cbc" x="370" y="40" width="83" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{codeid}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="45" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="54" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="42" splitType="Stretch"/>
+	</summary>
+</jasperReport>

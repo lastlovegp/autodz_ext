@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/loan/!svn/ver/2/source/src/com/huateng/ebank/framework/util/encrypt
+END
+vssver.scc
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/loan/!svn/ver/2/source/src/com/huateng/ebank/framework/util/encrypt/vssver.scc
+END
+EncryptDES.java
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/loan/!svn/ver/2/source/src/com/huateng/ebank/framework/util/encrypt/EncryptDES.java
+END
+Base64Encode.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/loan/!svn/ver/2/source/src/com/huateng/ebank/framework/util/encrypt/Base64Encode.java
+END

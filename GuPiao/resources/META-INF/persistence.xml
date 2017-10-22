@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+    http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+	version="2.0">
+
+	<persistence-unit name="SoftCall" transaction-type="RESOURCE_LOCAL">
+		<provider>
+			org.apache.openjpa.persistence.PersistenceProviderImpl
+		</provider>
+
+		<!--jta-data-source>java:comp/env/jdbc/DBPool</jta-data-source -->
+
+		<shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+		<properties>
+
+			<property name="openjpa.ConnectionProperties"
+				value="DriverClassName=com.mysql.jdbc.Driver,
+				Url=jdbc:mysql://localhost:3306/guopiao, MaxActive=100, MaxWait=20000, autoReconnect=true, TestOnBorrow=true,
+				poolPreparedStatements=true, Username=root, Password=root" />
+
+			<property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource" />
+			
+			
+			<!-- <property name="openjpa.ConnectionDriverName" value="com.mysql.jdbc.Driver"
+				/> <property name="openjpa.ConnectionURL" value="jdbc:mysql://127.0.0.1:3306/erp"
+				/> <property name="openjpa.ConnectionUserName" value="root" /> <property
+				name="openjpa.ConnectionPassword" value="root" /> -->
+				
+			<!--<property name="openjpa.Log" value="SQL=TRACE" /-->
+
+			<!-- 不使用加载时强化和编译时强化，使用运行时Unenhanced -->
+			<property name="openjpa.RuntimeUnenhancedClasses" value="supported" />
+
+            <!-- 在运行时会自动创建表，它也是通过java org.apache.openjpa.jdbc.meta.MappingTool 来处理的 -->
+			<!--<property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)" /-->
+
+		</properties>
+	</persistence-unit>
+	
+</persistence>
