@@ -778,6 +778,110 @@ namespace MdTZ
             return v_zf_str;
         }
 
+        /// <summary>
+        /// 插入图形数据
+        /// </summary>
+        /// <param name="dp"></param>
+        /// <param name="bean"></param>
+        /// <param name="type"></param>
+        public static void insertGpZhiBiao(TranBean dp, TranBean bean, int type)
+        {
+
+            if (bean.buyCodes != null && bean.buyCodes.Count > 0)
+            {
+                foreach (Tick t in bean.buyCodes)
+                {
+                    GPUtil.helper.ExecuteNonQuery("DELETE FROM gpzhibiao WHERE CODE = '"
+                         + t.sec_id + "' and type=" + type + " AND DATE = '" + Convert.ToDateTime(t.strtime).ToString("yyyy-MM-dd") + "'");
+
+                    String sql = "insert into gpzhibiao (code,type,zf5,zf10,zf30,rsi_6,rsi_12,rsi_24,sy_zf,ykl,"
+                                + "tp_bar_num,syx_bar_num,top_5_price,top_2_price,zr_open,qt_close,dp_rsi_6,dp_zf3,dp_zf,date) values ('"
+                                + t.sec_id + "'," + type + ","
+                                + bean.gpTotal.sum5Zf + ","
+                                + bean.gpTotal.sum10Zf + ","
+                                + bean.gpTotal.sum30Zf + ","
+                                + bean.gpTotal.rsi6 + ","
+                                + bean.gpTotal.rsi12 + ","
+                                + bean.gpTotal.rsi24 + ","
+                                + (bean.tick.last_price - bean.tick.low) / bean.tick.last_price * 100 + ","
+                                + bean.ykl+","
+                                + bean.gpTotal.tp_bar_num + ","
+                                + bean.gpTotal.syx_bar_num + ","
+                                + bean.gpTotal.top_5_day + ","
+                                + bean.gpTotal.top_2_day + ","
+                                + bean.lastDailyBar.open + ","
+                                + bean.lastDailyBar.pre_close + ","
+                                + dp.gpTotal.rsi6 + ","
+                                + dp.gpTotal.sum3Zf + ","
+                                + dp.zf + ",'"
+                                + Convert.ToDateTime(bean.tick.strtime).ToString("yyyy-MM-dd") + "')";
+                    GPUtil.helper.ExecuteNonQuery(sql);
+                }
+            }
+            else
+            {
+                GPUtil.helper.ExecuteNonQuery("DELETE FROM gpzhibiao WHERE CODE = '"
+                + bean.code + "' and type=" + type + " AND DATE = '" + Convert.ToDateTime(bean.tick.strtime).ToString("yyyy-MM-dd") + "'");
+
+                String sql = "";
+                if (bean.code.Length == 6)
+                {
+                    sql = "insert into gpzhibiao (code,type,zf5,zf10,zf30,rsi_6,rsi_12,rsi_24,sy_zf,ykl,"
+                              + "tp_bar_num,syx_bar_num,top_5_price,top_2_price,zr_open,qt_close,dp_rsi_6,dp_zf3,dp_zf,date) values ('"
+                              + bean.code + "'," + type + ","
+                              + bean.gpTotal.sum5Zf + ","
+                              + bean.gpTotal.sum10Zf + ","
+                              + bean.gpTotal.sum30Zf + ","
+                              + bean.gpTotal.rsi6 + ","
+                              + bean.gpTotal.rsi12 + ","
+                              + bean.gpTotal.rsi24 + ","
+                              + (bean.tick.last_price - bean.tick.low) / bean.tick.last_price * 100 + ","
+                              + bean.ykl + ","
+                              + bean.gpTotal.tp_bar_num + ","
+                              + bean.gpTotal.syx_bar_num + ","
+                              + bean.gpTotal.top_5_day + ","
+                              + bean.gpTotal.top_2_day + ","
+                              + bean.lastDailyBar.open + ","
+                              + bean.lastDailyBar.pre_close + ","
+                              + dp.gpTotal.rsi6 + ","
+                              + dp.gpTotal.sum3Zf + ","
+                              + dp.zf + ",'"
+                              + Convert.ToDateTime(bean.tick.strtime).ToString("yyyy-MM-dd") + "')";
+                }
+                else
+                {
+
+                    if (type == 0)
+                    {
+                        bean.ykl = 0;
+                    }
+
+                    sql = "insert into gpzhibiao (code,type,zf5,zf10,zf30,rsi_6,rsi_12,rsi_24,sy_zf,ykl,"
+                              + "tp_bar_num,syx_bar_num,top_5_price,top_2_price,zr_open,qt_close,dp_rsi_6,dp_zf3,dp_zf,date) values ('"
+                              + bean.code + "'," + type + ","
+                              + bean.gpTotal.sum5Zf + ","
+                              + bean.gpTotal.sum10Zf + ","
+                              + bean.gpTotal.sum30Zf + ","
+                              + bean.gpTotal.rsi6 + ","
+                              + bean.gpTotal.rsi12 + ","
+                              + bean.gpTotal.rsi24 + ","
+                              + (bean.tick.last_price - bean.tick.low) / bean.tick.last_price * 100 + ","
+                              + bean.ykl + ","
+                              + bean.gpTotal.tp_bar_num + ","
+                              + bean.gpTotal.syx_bar_num + ","
+                              + bean.gpTotal.top_5_day + ","
+                              + bean.gpTotal.top_2_day + ","
+                              + bean.lastDailyBar.open + ","
+                              + bean.lastDailyBar.pre_close + ",0,0,0,'"                            
+                              + Convert.ToDateTime(bean.tick.strtime).ToString("yyyy-MM-dd") + "')";
+                }
+
+               
+                GPUtil.helper.ExecuteNonQuery(sql);
+            }
+
+        }
+
 
         /// <summary>
         /// 获取当前股票仓位
@@ -1089,6 +1193,7 @@ namespace MdTZ
             if (HGStaUtil.DP_TICK_CODES.IndexOf(tick.sec_id) != -1)
             {
                 bean.isDp = true;
+                sta.dp = bean;
             }
             else
             {
@@ -1115,7 +1220,7 @@ namespace MdTZ
                        + "],方向[" + MdComm.IN_TYPE + "]", Convert.ToDateTime(tick.strtime));
                }
             }
-            else if (bean.code.Equals("RB"))
+            else if (sta.dp == null && bean.code.Equals("RB"))
             {
                 if (bean.seq % 600 == 0)
                 {

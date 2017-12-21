@@ -25,6 +25,7 @@ namespace MdTZ
 
             string allJJCodes = getAllJJCodes(allCodes)+",SHSE.000001,SZSE.399001,SZSE.399006";
             //string allJJCodes = "SHSE.000001,SZSE.399001,SZSE.399006";
+            //string allJJCodes = "SHFE.RB";
 
             List<DailyBar> barList = MdComm.md.GetLastDailyBars(allJJCodes);          
             List<DailyBar> last70Bars = null;         
@@ -35,7 +36,8 @@ namespace MdTZ
 
             double zhengf = 0;
             double sum_zhengf = 0;
-            double zr_open = 0;          
+            double zr_open = 0;
+            double zr_top = 0; 
             double qt_close = 0;
             double qt_pre_close = 0;
             double zr_low = 0;
@@ -143,7 +145,8 @@ namespace MdTZ
                 zhengf = 0;
                 sum_zhengf =0;
                 is_cxg = 0;
-                zr_open = 0;             
+                zr_open = 0;
+                zr_top = 0;
                 qt_close = 0;
                 zr_low = 0;
                 dt_bar_num = 0;
@@ -214,7 +217,18 @@ namespace MdTZ
 
                 zfRec = "";
 
-                last70Bars = MdComm.md.GetLastNDailyBars(MdComm.getJJCode(bar.exchange+"."+bar.sec_id), 360, GPUtil.nowTranDate.ToString("yyyy-MM-dd HH:MM:ss"));
+                if (bar.sec_id.Length == 6)
+                {
+                    last70Bars = MdComm.md.GetLastNDailyBars(MdComm.getJJCode(bar.exchange + "." + bar.sec_id), 360, GPUtil.nowTranDate.ToString("yyyy-MM-dd HH:MM:ss"));
+                }
+                else
+                {
+                    //昨日bar
+                    last70Bars = MdComm.md.GetDailyBars(bar.exchange + "." + bar.sec_id,
+                          GPUtil.nowTranDate.AddDays(-140).ToString("yyyy-MM-dd HH:MM:ss"), GPUtil.nowTranDate.ToString("yyyy-MM-dd HH:MM:ss"));
+                   
+                }
+               
                 if (last70Bars.Count < 60)
                 {
                     is_cxg = 1;
@@ -226,202 +240,414 @@ namespace MdTZ
                 #endregion                                        
 
                 #region 中间数据计算
-                foreach (DailyBar c_bar in last70Bars)
+
+                if (bar.sec_id.Length == 6)
                 {
-                    idx++;
-                    tran_am = Math.Round(c_bar.amount / 100000000, 2);
-                    sum_price += c_bar.close;
-                    zf = HGStaUtil.getBarZF(c_bar);
-                    sum_zf += zf;                  
-                    sum_amt += tran_am;
-
-                    //上长影线到现在天数
-                    if (syk_bar_num == 0 && Math.Round((c_bar.high - c_bar.low) / c_bar.low, 2) > 0.02
-                        && (c_bar.high - (c_bar.close + c_bar.open) / 2) > ((c_bar.close + c_bar.open) / 2 - c_bar.low) * 2)
+                    #region 股票循环处理
+                    foreach (DailyBar c_bar in last70Bars)
                     {
-                        syk_bar_num = idx;
-                    }             
+                        idx++;
+                        tran_am = Math.Round(c_bar.amount / 100000000, 2);
+                        sum_price += c_bar.close;
+                        zf = HGStaUtil.getBarZF(c_bar);
+                        sum_zf += zf;
+                        sum_amt += tran_am;
 
-                    tr = HGStaUtil.getTr(bar);
-                    sum_atr += tr;
+                        //上长影线到现在天数
+                        if (syk_bar_num == 0 && Math.Round((c_bar.high - c_bar.low) / c_bar.low, 2) > 0.02
+                            && (c_bar.high - (c_bar.close + c_bar.open) / 2) > ((c_bar.close + c_bar.open) / 2 - c_bar.low) * 2)
+                        {
+                            syk_bar_num = idx;
+                        }
 
-                    sum_rsi_zf += HGStaUtil.getBarZF(c_bar) > 0 ? HGStaUtil.getBarZF(c_bar) : 0;
-                    sum_rsi_df += HGStaUtil.getBarZF(c_bar) < 0 ? Math.Abs(HGStaUtil.getBarZF(c_bar)) : 0;
+                        tr = HGStaUtil.getTr(bar);
+                        sum_atr += tr;
 
-                    if (c_bar.low != 0)
-                    {
-                        zhengf = Math.Round(((c_bar.high - c_bar.low) / c_bar.low) * 100, 2);
-                        sum_zhengf += zhengf;
-                    }                   
+                        sum_rsi_zf += HGStaUtil.getBarZF(c_bar) > 0 ? HGStaUtil.getBarZF(c_bar) : 0;
+                        sum_rsi_df += HGStaUtil.getBarZF(c_bar) < 0 ? Math.Abs(HGStaUtil.getBarZF(c_bar)) : 0;
 
-                    if (lowest_price != 0 && lowest_amt != 0)
-                    {
-                        lowest_price = lowest_price < c_bar.close ? lowest_price : c_bar.close;
-                        lowest_amt = lowest_amt < tran_am ? lowest_amt : tran_am;
+                        if (c_bar.low != 0)
+                        {
+                            zhengf = Math.Round(((c_bar.high - c_bar.low) / c_bar.low) * 100, 2);
+                            sum_zhengf += zhengf;
+                        }
+
+                        if (lowest_price != 0 && lowest_amt != 0)
+                        {
+                            lowest_price = lowest_price < c_bar.close ? lowest_price : c_bar.close;
+                            lowest_amt = lowest_amt < tran_am ? lowest_amt : tran_am;
+                        }
+                        else
+                        {
+                            lowest_price = c_bar.close;
+                            lowest_amt = tran_am;
+                        }
+
+                        if (highest_price != 0 && highest_amt != 0)
+                        {
+                            highest_price = highest_price > c_bar.close ? highest_price : c_bar.close;
+                            highest_amt = highest_amt > tran_am ? highest_amt : tran_am;
+                        }
+                        else
+                        {
+                            highest_price = c_bar.close;
+                            highest_amt = tran_am;
+                        }
+
+                        //涨幅历史记录
+                        if (idx <= 10)
+                        {
+                            zfRec += getZfHisStr(c_bar.sec_id, zf);
+                        }
+
+                        //记录上次突破K线数
+                        if (tp_bar_num == 0 && zf > 4)
+                        {
+                            tp_bar_num = idx;
+                            last_tp_open = Math.Round(c_bar.open, 2);
+                        }
+
+                        if (dt_bar_num == 0 && zf < -5)
+                        {
+                            dt_bar_num = idx;
+                        }
+
+                        if (zt_bar_num == 0 && zf > 9)
+                        {
+                            zt_bar_num = idx;
+                            zt_bar_open = Math.Round(c_bar.open, 2);
+                        }
+
+                        if (idx > 1)
+                        {
+                            pre_sum_price += c_bar.close;
+                        }
+
+
+                        if (idx == 1)
+                        {
+                            last_price = c_bar.close;
+                            curBar = c_bar;
+                            last_amt = tran_am;
+                            zr_low = c_bar.low;
+
+                            zr_open = c_bar.open;
+                            zr_top = c_bar.high;
+                        }
+                        else if (idx == 2)
+                        {
+                            qt_price = c_bar.close;
+                            qtDayBar = c_bar;
+
+                            zf_sum_2 = sum_zf;
+                            top_2_price = Math.Round(highest_price, 2);
+                            qt_close = c_bar.close;
+                            qt_pre_close = c_bar.pre_close;
+                        }
+                        else if (idx == 3)
+                        {
+                            dqt_price = c_bar.close;
+
+                            low_3_amt = lowest_amt;
+                            low_3_price = lowest_price;
+
+                            zf_sum_3 = sum_zf;
+
+                        }
+                        else if (idx == 5)
+                        {
+                            low_5_price = lowest_price;
+                            low_5_amt = lowest_amt;
+
+                            high_5_amt = highest_amt;
+                            sum_5_amt = sum_amt;
+
+                            jj_5 = Math.Round(sum_price / idx, 2);
+                            top_5_price = Math.Round(highest_price, 2);
+
+
+                        }
+                        else if (idx == 6)
+                        {
+                            rsi6 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
+                            pre_jj_5 = Math.Round(pre_sum_price / (idx - 1), 2);
+                        }
+                        else if (idx == 10)
+                        {
+                            low_10_price = lowest_price;
+                            low_10_amt = lowest_amt;
+
+                            zf_sum_10 = sum_zf;
+                            sum_10_amt = sum_amt;
+
+                            jj_10 = Math.Round(sum_price / idx, 2);
+                        }
+                        else if (idx == 11)
+                        {
+                            pre_jj_10 = Math.Round(pre_sum_price / (idx - 1), 2);
+                        }
+                        else if (idx == 12)
+                        {
+                            rsi12 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
+                        }
+                        else if (idx == 20)
+                        {
+                            jj_20 = Math.Round(sum_price / idx, 2);
+                        }
+                        else if (idx == 24)
+                        {
+                            rsi24 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
+
+                        }
+
+                        else if (idx == 30)
+                        {
+                            jj_30 = Math.Round(sum_price / idx, 2);
+                            low_30_price = lowest_price;
+                            low_30_amt = lowest_amt;
+
+                            zf_sum_30 = sum_zf;
+                            sum_30_amt = sum_amt;
+
+                        }
+                        else if (idx == 60)
+                        {
+                            jj_60 = Math.Round(sum_price / idx, 2);
+                            low_60_price = lowest_price;
+                            low_60_amt = lowest_amt;
+
+                            rsi60 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
+
+                            atr = Math.Round(sum_atr / idx, 2);
+
+                            top_60_price = Math.Round(highest_price, 2);
+
+                            sum_60_amt = sum_amt;
+
+                        }
+
+                        preBar = c_bar;
                     }
-                    else
+
+                    last_price = Math.Round(last_price, 2);
+                    qt_price = Math.Round(qt_price, 2);
+                    dqt_price = Math.Round(dqt_price, 2);
+                    low_10_price = Math.Round(low_10_price, 2);
+                    last_amt = Math.Round(last_amt, 2);
+                    low_10_amt = Math.Round(low_10_amt, 2);
+
+                    if (curBar == null)
                     {
-                        lowest_price = c_bar.close;
-                        lowest_amt = tran_am;
+                        continue;
                     }
 
-                    if (highest_price != 0 && highest_amt != 0)
-                    {
-                        highest_price = highest_price > c_bar.close ? highest_price : c_bar.close;
-                        highest_amt = highest_amt > tran_am ? highest_amt : tran_am;
-                    }
-                    else
-                    {
-                        highest_price = c_bar.close;
-                        highest_amt = tran_am;
-                    }
-
-                    //涨幅历史记录
-                    if (idx <= 10)
-                    {
-                        zfRec += getZfHisStr(c_bar.sec_id,zf);
-                    }
-
-                    //记录上次突破K线数
-                    if (tp_bar_num == 0 && zf > 4)
-                    {
-                        tp_bar_num = idx;
-                        last_tp_open = Math.Round(c_bar.open, 2);
-                    }
-
-                    if (dt_bar_num == 0 && zf < -5)
-                    {
-                        dt_bar_num = idx;                        
-                    }
-
-                    if (zt_bar_num == 0 && zf > 9)
-                    {
-                        zt_bar_num = idx;
-                        zt_bar_open = Math.Round(c_bar.open, 2);
-                    }
- 
-                    if (idx > 1)
-                    {
-                        pre_sum_price += c_bar.close;
-                    }
-
-
-                    if (idx == 1)
-                    {
-                        last_price = c_bar.close;                        
-                        curBar = c_bar;
-                        last_amt = tran_am;
-                        zr_low = c_bar.low;
-
-                        zr_open = c_bar.open;
-                    }
-                    else if (idx == 2)
-                    {
-                        qt_price = c_bar.close;                       
-                        qtDayBar = c_bar;
-
-                        zf_sum_2 = sum_zf;                       
-                        top_2_price = Math.Round(highest_price, 2);
-                        qt_close = c_bar.close;
-                        qt_pre_close = c_bar.pre_close;
-                    }
-                    else if (idx == 3)
-                    {
-                        dqt_price = c_bar.close; 
-
-                        low_3_amt = lowest_amt;
-                        low_3_price = lowest_price;
-
-                        zf_sum_3 = sum_zf;
-                       
-                    }
-                    else if (idx == 5)
-                    {
-                        low_5_price = lowest_price;
-                        low_5_amt = lowest_amt;
-
-                        high_5_amt = highest_amt;                        
-                        sum_5_amt = sum_amt;
-
-                        jj_5 = Math.Round(sum_price / idx, 2);
-                        top_5_price = Math.Round(highest_price, 2);
-
-                       
-                    }
-                    else if (idx == 6)
-                    {
-                        rsi6 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
-                        pre_jj_5 = Math.Round(pre_sum_price / (idx-1), 2);                       
-                    }                   
-                    else if (idx == 10)
-                    {
-                        low_10_price = lowest_price;
-                        low_10_amt = lowest_amt;
-
-                        zf_sum_10 = sum_zf;
-                        sum_10_amt = sum_amt;
-
-                        jj_10 = Math.Round(sum_price / idx, 2);
-                    }
-                    else if (idx == 11)
-                    {
-                        pre_jj_10 = Math.Round(pre_sum_price / (idx - 1), 2);                        
-                    }
-                    else if (idx == 12)
-                    {
-                        rsi12 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;                        
-                    }                   
-                    else if (idx == 20)
-                    {
-                        jj_20 = Math.Round(sum_price / idx, 2);                      
-                    }
-                    else if (idx == 24)
-                    {
-                        rsi24 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
-                       
-                    }
-                  
-                    else if (idx == 30)
-                    {
-                        jj_30 = Math.Round(sum_price / idx, 2);
-                        low_30_price = lowest_price;
-                        low_30_amt = lowest_amt;
-
-                        zf_sum_30 = sum_zf;                       
-                        sum_30_amt = sum_amt;
-                                               
-                    }
-                    else if (idx == 60)
-                    {
-                        jj_60 = Math.Round(sum_price / idx, 2);
-                        low_60_price = lowest_price;
-                        low_60_amt = lowest_amt;                      
-
-                        rsi60 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
-
-                        atr = Math.Round(sum_atr / idx, 2);                       
-
-                        top_60_price = Math.Round(highest_price, 2);
-
-                        sum_60_amt = sum_amt;
-                      
-                    }                   
-
-                    preBar = c_bar;
+                    #endregion
                 }
-
-                last_price = Math.Round(last_price, 2);
-                qt_price = Math.Round(qt_price, 2);
-                dqt_price = Math.Round(dqt_price, 2);
-                low_10_price = Math.Round(low_10_price, 2);
-                last_amt = Math.Round(last_amt, 2);
-                low_10_amt = Math.Round(low_10_amt, 2);
-
-                if (curBar == null)
+                else
                 {
-                    continue;
-                }
+                    #region 期货循环处理
+                    DailyBar c_bar = null;                    
+                    for (int i = last70Bars.Count - 1; i >= 0; i--)
+                    {
+                        idx++;
+                        c_bar = last70Bars[i];
+                        tran_am = Math.Round(c_bar.amount / 100000000, 2);
+                        sum_price += c_bar.close;
+                        zf = HGStaUtil.getBarZF(c_bar);
+                        sum_zf += zf;
+                        sum_amt += tran_am;
 
+                        //上长影线到现在天数
+                        if (syk_bar_num == 0 && Math.Round((c_bar.high - c_bar.low) / c_bar.low, 2) > 0.02
+                            && (c_bar.high - (c_bar.close + c_bar.open) / 2) > ((c_bar.close + c_bar.open) / 2 - c_bar.low) * 2)
+                        {
+                            syk_bar_num = idx;
+                        }
+
+                        tr = HGStaUtil.getTr(bar);
+                        sum_atr += tr;
+
+                        sum_rsi_zf += HGStaUtil.getBarZF(c_bar) > 0 ? HGStaUtil.getBarZF(c_bar) : 0;
+                        sum_rsi_df += HGStaUtil.getBarZF(c_bar) < 0 ? Math.Abs(HGStaUtil.getBarZF(c_bar)) : 0;
+
+                        if (c_bar.low != 0)
+                        {
+                            zhengf = Math.Round(((c_bar.high - c_bar.low) / c_bar.low) * 100, 2);
+                            sum_zhengf += zhengf;
+                        }
+
+                        if (lowest_price != 0 && lowest_amt != 0)
+                        {
+                            lowest_price = lowest_price < c_bar.close ? lowest_price : c_bar.close;
+                            lowest_amt = lowest_amt < tran_am ? lowest_amt : tran_am;
+                        }
+                        else
+                        {
+                            lowest_price = c_bar.close;
+                            lowest_amt = tran_am;
+                        }
+
+                        if (highest_price != 0 && highest_amt != 0)
+                        {
+                            highest_price = highest_price > c_bar.close ? highest_price : c_bar.close;
+                            highest_amt = highest_amt > tran_am ? highest_amt : tran_am;
+                        }
+                        else
+                        {
+                            highest_price = c_bar.close;
+                            highest_amt = tran_am;
+                        }
+
+                        //涨幅历史记录
+                        if (idx <= 10)
+                        {
+                            zfRec += getZfHisStr(c_bar.sec_id, zf);
+                        }
+
+                        //记录上次突破K线数
+                        if (tp_bar_num == 0 && zf > 4)
+                        {
+                            tp_bar_num = idx;
+                            last_tp_open = Math.Round(c_bar.open, 2);
+                        }
+
+                        if (dt_bar_num == 0 && zf < -5)
+                        {
+                            dt_bar_num = idx;
+                        }
+
+                        if (zt_bar_num == 0 && zf > 9)
+                        {
+                            zt_bar_num = idx;
+                            zt_bar_open = Math.Round(c_bar.open, 2);
+                        }
+
+                        if (idx > 1)
+                        {
+                            pre_sum_price += c_bar.close;
+                        }
+
+
+                        if (idx == 1)
+                        {
+                            last_price = c_bar.close;
+                            curBar = c_bar;
+                            last_amt = tran_am;
+                            zr_low = c_bar.low;
+
+                            zr_open = c_bar.open;
+                            zr_top = c_bar.high;
+                        }
+                        else if (idx == 2)
+                        {
+                            qt_price = c_bar.close;
+                            qtDayBar = c_bar;
+
+                            zf_sum_2 = sum_zf;
+                            top_2_price = Math.Round(highest_price, 2);
+                            qt_close = c_bar.close;
+                            qt_pre_close = c_bar.pre_close;
+                        }
+                        else if (idx == 3)
+                        {
+                            dqt_price = c_bar.close;
+
+                            low_3_amt = lowest_amt;
+                            low_3_price = lowest_price;
+
+                            zf_sum_3 = sum_zf;
+
+                        }
+                        else if (idx == 5)
+                        {
+                            low_5_price = lowest_price;
+                            low_5_amt = lowest_amt;
+
+                            high_5_amt = highest_amt;
+                            sum_5_amt = sum_amt;
+
+                            jj_5 = Math.Round(sum_price / idx, 2);
+                            top_5_price = Math.Round(highest_price, 2);
+
+
+                        }
+                        else if (idx == 6)
+                        {
+                            rsi6 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
+                            pre_jj_5 = Math.Round(pre_sum_price / (idx - 1), 2);
+                        }
+                        else if (idx == 10)
+                        {
+                            low_10_price = lowest_price;
+                            low_10_amt = lowest_amt;
+
+                            zf_sum_10 = sum_zf;
+                            sum_10_amt = sum_amt;
+
+                            jj_10 = Math.Round(sum_price / idx, 2);
+                        }
+                        else if (idx == 11)
+                        {
+                            pre_jj_10 = Math.Round(pre_sum_price / (idx - 1), 2);
+                        }
+                        else if (idx == 12)
+                        {
+                            rsi12 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
+                        }
+                        else if (idx == 20)
+                        {
+                            jj_20 = Math.Round(sum_price / idx, 2);
+                        }
+                        else if (idx == 24)
+                        {
+                            rsi24 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
+
+                        }
+
+                        else if (idx == 30)
+                        {
+                            jj_30 = Math.Round(sum_price / idx, 2);
+                            low_30_price = lowest_price;
+                            low_30_amt = lowest_amt;
+
+                            zf_sum_30 = sum_zf;
+                            sum_30_amt = sum_amt;
+
+                        }
+                        else if (idx == 60)
+                        {
+                            jj_60 = Math.Round(sum_price / idx, 2);
+                            low_60_price = lowest_price;
+                            low_60_amt = lowest_amt;
+
+                            rsi60 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
+
+                            atr = Math.Round(sum_atr / idx, 2);
+
+                            top_60_price = Math.Round(highest_price, 2);
+
+                            sum_60_amt = sum_amt;
+
+                        }
+
+                        preBar = c_bar;
+                    }
+
+                    last_price = Math.Round(last_price, 2);
+                    qt_price = Math.Round(qt_price, 2);
+                    dqt_price = Math.Round(dqt_price, 2);
+                    low_10_price = Math.Round(low_10_price, 2);
+                    last_amt = Math.Round(last_amt, 2);
+                    low_10_amt = Math.Round(low_10_amt, 2);
+
+                    if (curBar == null)
+                    {
+                        continue;
+                    }
+
+                    #endregion
+                }              
+                
                 #endregion
                                         
                 #region 基础数据更新
@@ -473,7 +699,9 @@ namespace MdTZ
                         .Append(",zf3=")
                         .Append(zf_sum_3)
                         .Append(",zr_open=")
-                        .Append(zr_open)         
+                        .Append(zr_open)
+                         .Append(",zr_top=")
+                        .Append(zr_top)      
                         .Append(",qt_close=")
                         .Append(qt_close)
                         .Append(",zr_low=")
