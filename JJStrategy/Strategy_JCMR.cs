@@ -10,7 +10,7 @@ namespace MdTZ
     /// <summary>
     /// 套利策略
     /// </summary>
-    class Strategy_JCMR : Strategy
+    class Strategy_JCMR: Strategy
     {
 
         #region 成员变量
@@ -34,8 +34,174 @@ namespace MdTZ
         #endregion
 
         #region 成员方法
+     
+        /// <summary>
+        /// 逐步补仓法，尾盘买入
+        /// </summary>
+        /// <param name="sta"></param>
+        /// <param name="bean"></param>
+        /// <param name="tran_mode"></param>
+        /// <returns></returns>
+        public bool isNeedOpenOrder(StrateSta sta, TranBean bean, int tran_mode)
+        {
+            #region 初始化
+            bean.xh_type = 0;
+            if (bean.isDp || bean.isCYB || bean.isZxp || bean.isSZ50 || bean.gpInfo == null)
+            {
+                return false;
+            }
+            #endregion
 
+            #region 龙头1 
+            if (
+                sta != null && sta.dp != null
+                && bean.gpTotal != null
+                && bean.gpInfo != null
+                && !bean.gpInfo.gns.Equals("zs")              
+                && bean.lastDailyBar != null
+                && bean.gpInfo.gpflag == 10
+                && bean.buy_cnt == 0
+                && bean.tick.pre_close > 0
+                && bean.tick.pre_close <= bean.gpTotal.low_3_day
+                && bean.btime > (bean.zf > 0 ? 9.32 : 14.50)    
+                && bean.btime <= 14.58
+               )
+            {
+                bean.xh_type = GPConstants.XH_BUY_CD;
+                return true;
+            }
 
+            #endregion      
+
+            #region 龙头2
+            if (
+                sta != null && sta.dp != null
+                && bean.gpTotal != null
+                && bean.gpInfo != null
+                && !bean.gpInfo.gns.Equals("zs")
+                && bean.lastDailyBar != null
+                && bean.gpInfo.gpflag == 9
+                && bean.buy_cnt == 0
+                && bean.tick.pre_close > 0
+                && bean.tick.pre_close <= bean.gpTotal.low_5_day
+                && bean.btime > (bean.zf > 0 ? 9.32 : 14.50)
+                && bean.btime <= 14.58
+               )
+            {
+                bean.xh_type = GPConstants.XH_BUY_CD;
+                return true;
+            }
+
+            #endregion 
+            
+            #region 龙头3
+            if (
+                sta != null && sta.dp != null
+                && bean.gpTotal != null
+                && bean.gpInfo != null
+                && !bean.gpInfo.gns.Equals("zs")
+                && bean.lastDailyBar != null
+                && bean.gpInfo.gpflag == 8
+                && bean.buy_cnt == 0
+                && bean.tick.pre_close > 0
+                && bean.tick.pre_close <= bean.gpTotal.low_10_day
+                && bean.btime > (bean.zf > 0 ? 9.32 : 14.50)
+                && bean.btime <= 14.58
+               )
+            {
+                bean.xh_type = GPConstants.XH_BUY_CD;
+                return true;
+            }
+            #endregion
+
+            #region 龙头4
+            if (
+                sta != null && sta.dp != null
+                && bean.gpTotal != null
+                && bean.gpInfo != null
+                && !bean.gpInfo.gns.Equals("zs")
+                && bean.lastDailyBar != null
+                && bean.gpInfo.gpflag == 7
+                && bean.buy_cnt == 0
+                && bean.tick.pre_close > 0
+                && bean.tick.pre_close <= bean.gpTotal.low_20_day
+                && bean.btime > (bean.zf > 0 ? 9.32 : 14.50)
+                && bean.btime <= 14.58
+               )
+            {
+                bean.xh_type = GPConstants.XH_BUY_CD;
+                return true;
+            }
+            #endregion
+
+            #region 龙头5
+            if (
+                sta != null && sta.dp != null
+                && bean.gpTotal != null
+                && bean.gpInfo != null
+                && !bean.gpInfo.gns.Equals("zs")
+                && bean.lastDailyBar != null
+                && bean.gpInfo.gpflag == 6
+                && bean.buy_cnt == 0
+                && bean.tick.pre_close > 0
+                && bean.tick.pre_close <= bean.gpTotal.low_30_day
+                && bean.btime > (bean.zf > 0 ? 9.32 : 14.50)
+                && bean.btime <= 14.58
+               )
+            {
+                bean.xh_type = GPConstants.XH_BUY_CD;
+                return true;
+            }
+            #endregion
+
+            #region 龙头6
+            if (
+                sta != null && sta.dp != null
+                && bean.gpTotal != null
+                && bean.gpInfo != null
+                && !bean.gpInfo.gns.Equals("zs")
+                && bean.lastDailyBar != null
+                && bean.gpInfo.gpflag < 6
+                && bean.buy_cnt == 0
+                && bean.tick.pre_close > 0
+                && bean.tick.pre_close <= bean.gpTotal.low_60_day
+                && bean.btime > (bean.zf > 0 ? 9.32 : 14.50)
+                && bean.btime <= 14.58
+               )
+            {
+                bean.xh_type = GPConstants.XH_BUY_CD;
+                return true;
+            }
+            #endregion
+
+            #region 补仓
+            if (
+                bean.gpInfo != null
+                && !bean.gpInfo.gns.Equals("zs")
+                && bean.gpTotal != null
+                && bean.buy_cnt == 0
+                && bean.sell_cnt == 0
+                && bean.lastDailyBar != null
+                && bean.tick.cum_amount > 0
+                && bean.positionDb != null
+                && bean.positionDb.available > 0
+                && (bean.tick.pre_close < bean.gpTotal.jj5
+                    && bean.tick.pre_close < bean.gpTotal.jj10
+                    && bean.tick.pre_close < bean.gpTotal.jj30
+                    && bean.tick.pre_close < bean.gpTotal.jj60)   
+                && bean.ykl < -1
+                && bean.zf < 0
+                && bean.tick.last_price < bean.timejj
+                && bean.btime >= 14.50
+               )
+            {
+                bean.xh_type = GPConstants.XH_BUY_BC;
+                return true;
+            }
+            #endregion
+
+            return false;
+        }
 
         #endregion
 
@@ -47,7 +213,7 @@ namespace MdTZ
         {
             #region 策略初始化
             //时间控制下
-            DateTime t_time = Convert.ToDateTime(tick.strtime);           
+            DateTime t_time = Convert.ToDateTime(tick.strtime);
             //获取封装过的bean
             TranBean bean = null;
             try
@@ -65,50 +231,50 @@ namespace MdTZ
                 Console.WriteLine(e.StackTrace);
                 return;
             }
-            
-            //快捷键
-            String kjj = "";
-            if (tick.sec_id.Equals("RB"))
+
+            //sh000001,sz399001,sz399006
+            if ("000001".Equals(bean.code))
             {
-                kjj = "1";
+                bean.isDp = true;
+                strateSta.dp = bean;
             }
-            else if (tick.sec_id.Equals("JM"))
+            else if ("000016".Equals(bean.code)) //上周50
             {
-                kjj = "2";
+                bean.isSZ50 = true;
+                strateSta.sz50 = bean;
             }
-            else if (tick.sec_id.Equals("J"))
+            else if ("399001".Equals(bean.code))
             {
-                kjj = "3";
+                bean.isZxp = true;
+                strateSta.zxb = bean;
             }
-            else if (tick.sec_id.Equals("I"))
+            else if ("399006".Equals(bean.code))
             {
-                kjj = "4";
-            }
-           
+                bean.isCYB = true;
+                strateSta.cyb = bean;
+            }            
+
+            //tick时间
+            double btime = bean.btime;          
+
             //初始化信号标志
             bean.xh_flag = 0;
             bean.xh_type = 0;
 
             #region 仓位初始化
-            if (bean != null && bean.gpTotal != null && bean.gpInfo != null)
+            if (bean != null && bean.gpTotal != null && bean.gpInfo != null
+                && !bean.isDp && !bean.isZxp && !bean.isSZ50 && !bean.isCYB)
             {
                 //最小买入单位
-                bean.gpTotal.minUnit = 1;             
+                bean.gpTotal.minUnit = 1;
 
                 //本地仓库（数据库)           
                 if (bean.gpInfo != null && bean.positionDb != null)
-                {                                   
+                {                   
                     if (bean.positionDb.available > 0 && bean.positionDb.vwap > 0)
                     {
                         //盈亏率
-                        if (bean.positionDb.inxh == 2)
-                        {
-                            bean.ykl = Math.Round((bean.positionDb.vwap - tick.last_price) / tick.last_price * 100, 2);
-                        }
-                        else
-                        {
-                             bean.ykl = Math.Round((tick.last_price - bean.positionDb.vwap) / bean.positionDb.vwap * 100, 2);
-                        } 
+                        bean.ykl = Math.Round((tick.last_price - bean.positionDb.vwap) / bean.positionDb.vwap * 100, 2);
                     }
                     else
                     {
@@ -118,211 +284,229 @@ namespace MdTZ
             }
             #endregion
 
-            #endregion
+            #endregion          
 
-            #region 期货止盈止损
-            //止盈止损
-            if (bean.gpInfo != null
-                && bean.gpInfo.gns.Equals("zs")
+            #region 股票平仓
+
+            //平仓
+            if (!bean.isDp 
+                && bean.gpInfo != null
+                && !bean.gpInfo.gns.Equals("zs")
                 && bean.positionDb != null
-                && bean.positionDb.available > 0
-                && tick.exchange != null
+                && bean.code.Equals(bean.positionDb.code)
+                && bean.positionDb.can_tran_dw > 0
+                && strateSta != null && strateSta.dp != null
                 && tick.last_price > 0
-                && bean.btime >= 9.05
-                && bean.btime <= 15.00
-                && bean.btime - bean.b_buy_time >= 0.5
-                )
+                && strateSta != null && strateSta.dp != null
+                && bean.buy_cnt == 0
+                && bean.sell_cnt == 0)
             {
+
+                double zy_sellTime = 9.35;
+                double zs_sellTime = 9.35;
+
                 //设置止盈止损               
                 double zy = 1;
-                double zs = -1;
+                double zs = -2;
 
-                bool default_zs = bean.ykl < zs;
-                bool default_zy = bean.ykl > zy;
-
-                //日内最后清仓
-                if (bean.btime > 14.55)
+                if (bean.gpTotal.sum30Zf < -20 
+                    || bean.gpTotal.sum10Zf < -15 
+                    || bean.gpTotal.sum5Zf < -10)
                 {
-                    default_zy = true;
+                     zy = 2;
+                     zs = -4;
+                }
+                else if (bean.gpTotal.sum30Zf <= 2)
+                {
+                    zs_sellTime = 10.45;
+                }
+                else if (bean.gpInfo.gpflag >=8)
+                {
+                    zs_sellTime = 14.45;
+                }
+
+                if (strateSta.dp.zf >= 0.5)
+                {
+                    zy = 2;
+                    zs = -4;
+                }
+
+                if (bean.tick.last_price < bean.gpTotal.jj5 
+                    && bean.tick.last_price < bean.gpTotal.jj10
+                    && bean.tick.last_price < bean.gpTotal.jj30
+                    && bean.tick.last_price < bean.gpTotal.jj60)
+                {
+                    zy = 2;
+                    zs = -4;
+                }
+
+                if (bean.gpInfo.gpflag >= 10)
+                {
+                    zy = 4;
+                    zs = -4;
+                }
+              
+                bool default_zs = (bean.ykl < zs && bean.btime > ((bean.tick.last_price < bean.timejj) ? zs_sellTime : 14.40));
+                bool default_zy = (bean.ykl > zy && bean.btime > ((bean.tick.last_price < bean.timejj) ? zy_sellTime : 14.40));
+
+                //涨停不卖
+                if (bean.zf > 9)
+                {
+                    default_zy = false;
+                }
+
+                if (bean.zf > 0)
+                {
+                    default_zs = false;
                 }
 
                 //兜底的止损强制止益--保险丝
                 if (default_zy || default_zs)
                 {
-                    //卖出多仓
-                    if (bean.positionDb.inxh == 1)
+                    lock (Locker2)
                     {
-                        CloseLong(tick.exchange, tick.sec_id, tick.last_price, 1);
-                    }
-                    else
-                    {
-                        CloseShort(tick.exchange, tick.sec_id, tick.last_price, 1);
-                    }
-
-                    if (MdComm.QH_SP_FLAG == 1)
-                    {
-                        lock (Locker2)
+                        //实盘交易
+                        if (MdComm.str_mode == 6 && MdComm.JJ_SP_FLAG == 1 && MdComm.TRAN_FALG == 1)
                         {
                             MdComm.SP_TRAN_FLAG = 1;
-                            if (bean.positionDb.inxh == 1)
-                            {
-                                PAQHApi.xiadan(kjj, "d", "s");
-                            }
-                            else
-                            {
-                                PAQHApi.xiadan(kjj, "k", "s");
-                            }
+                            PAApi.sellOut(tick.sec_id, 0, 0);
                             MdComm.SP_TRAN_FLAG = 0;
-                            Console.WriteLine("###掘金开仓期货: {0},时间 {1} 价格 {2} 数量 {3} 信号 {4}",
-                                 bean.buyCode, Convert.ToDateTime(tick.strtime).ToString("yyyy-MM-dd HH:MM:ss")
-                                 , tick.ask_p2, 1, RiskMng.getXhDesc(bean.xh_type));
+                            //ZXApi.sellOut(tick.sec_id, THSAPI.PRICE_OPT_BUY_2, tick.bid_p2, THSAPI.NUM_OPT_ALL, 0);
+                            //TXDApi.sellOut(tick.sec_id, 0);                                                                                                                           
                         }
                     }
 
-                    //卖出更新仓位                   
-                    GPUtil.updatePosition(-1, tick.sec_id, bean.positionDb.inxh, 1, tick.last_price, Convert.ToDateTime(tick.strtime), "0");
+                  
+                    //导入1分钟BAR记录
+                    if (MdComm.str_mode == 8)
+                    {
+                        //卖出交易
+                        CloseLong(tick.exchange, tick.sec_id, tick.last_price, bean.positionDb.can_tran_dw);
+
+                        HGStaUtil.insertGpZhiBiao(strateSta.dp, bean, 1);
+                    }                 
 
                     //头寸更新
                     if (bean.positionDb != null)
                     {
+                        //卖出更新仓位                   
+                        GPUtil.updatePosition(-1, tick.sec_id, bean.positionDb.inxh, bean.positionDb.can_tran_dw, tick.last_price, Convert.ToDateTime(tick.strtime), "0");
+
                         Console.WriteLine("卖出: {0},时间 {1} 买入 {2} 价格 {3} 数量 {4} 盈亏率 {5} 信号 {6}",
                                 tick.sec_id,
                                 Convert.ToDateTime(tick.strtime).ToString("yyyy-MM-dd HH:MM:ss"),
-                                bean.positionDb.vwap, tick.bid_p2, bean.positionDb.can_tran_dw, bean.ykl, "止盈止损");
+                                bean.positionDb.vwap, tick.bid_p2, bean.positionDb.can_tran_dw, bean.ykl, RiskMng.getXhDesc(bean.positionDb.inxh));
 
-                        if (MdComm.str_mode == 2)
-                        {
-                            JJUtil.dblog(5, "掘金卖出:" + tick.sec_id + "成本价:"
-                               + bean.positionDb.vwap + ",价格:" + tick.bid_p2 + " 数量:" + bean.positionDb.can_tran_dw + ",信号:止盈止损"
-                               , Convert.ToDateTime(tick.strtime));
-                        }
-                    }
-
-                    //指标详细信息
-                    if (MdComm.str_mode == 4 && bean.ykl < 0 && bean.sell_cnt == 0)
-                    {
-                        JJUtil.loadGpBarList(tick.exchange + "." + tick.sec_id, 1, Convert.ToDateTime(tick.strtime).AddMinutes(-300).ToString("yyyy-MM-dd HH:MM:ss")
-                            , Convert.ToDateTime(tick.strtime).AddMinutes(420).ToString("yyyy-MM-dd HH:MM:ss"));
+                        JJUtil.dblog(5, "掘金卖出:" + tick.sec_id + "成本价:"
+                            + bean.positionDb.vwap + ",价格:" + tick.bid_p2 + " 数量:" + bean.positionDb.can_tran_dw + ",信号:" + RiskMng.getXhDesc(bean.positionDb.inxh)
+                            , Convert.ToDateTime(tick.strtime));
                     }
 
                     //本地库
-                    bean.positionDb = GPUtil.getPositionDb(bean.code);
+                    bean.positionDb = GPUtil.getPositionDb(bean.tick.sec_id);
 
                     //累计卖出次数
                     bean.sell_cnt++;
-                }
 
+
+                }
             }
 
             #endregion
 
-            #region 期货开仓
+            #region 股票开仓
             //开仓
-            if (bean.tick.last_price > 0
+            if (
+                !bean.isDp && !bean.isCYB && !bean.isSZ50 && !bean.isZxp
                 && bean.gpInfo != null
-                && bean.gpInfo.gns.Equals("zs")
-                && (bean.positionDb == null || bean.positionDb.available == 0)
-                && bean.lastDailyBar != null && tick.exchange != null
-                && bean.btime >= 9.03
-                && bean.btime < 14.50
+                && !bean.gpInfo.gns.Equals("zs")
+                && isNeedOpenOrder(strateSta, bean, MdComm.TRAN_MODE)
+                && bean.xh_type != 0
+                && bean.tick.last_price > 0             
+                && bean.buy_cnt < today_buy_cnt
+                && bean.sell_cnt == 0
                 )
             {
-                //实盘仓位数
-                int buy_num = 1;
-                double zrzf = HGStaUtil.getBarZF(bean.lastDailyBar);
-                double sk = bean.lastDailyBar.high; //上轨＝昨日高点
-                if (zrzf > -1 && zrzf < 0
-                    && bean.lastDailyBar.close <= bean.gpTotal.low_5_day
-                )
+                //同类的只能有一个                
+                if (bean.xh_type != GPConstants.XH_BUY_BC
+                    && MdComm.str_mode == 6
+                    && JJUtil.dbGnsList.Contains(bean.gpInfo.gns))
                 {
-                    sk = bean.lastDailyBar.close;
+                    return;
+                }   
+
+                //实盘仓位数
+                int buy_num = 300;
+                if (bean.tick.last_price > 30)
+                {
+                    buy_num = 100;
+                }
+                else if (bean.tick.last_price < 10)
+                {
+                    buy_num = 500;
+                }
+                else if (bean.tick.last_price > 10 && bean.tick.last_price < 20)
+                {
+                    buy_num = 300;
+                }    
+
+                if (MdComm.JJ_SP_FLAG == 1
+                    && MdComm.str_mode == 6 
+                    && bean.gpInfo.gpflag >= 5
+                    && MdComm.TRAN_FALG == 1)
+                {
+                    lock (Locker2)
+                    {
+                        //ZXApi.buyIn(tick.sec_id, THSAPI.PRICE_OPT_SELL_2, tick.ask_p2, THSAPI.NUM_OPT_INPUT, 1 * 100);
+                        //TXDApi.buyIn(tick.sec_id, buy_num);
+                        MdComm.SP_TRAN_FLAG = 1;
+                        PAApi.buyIn(bean.code, 0, buy_num);
+                        MdComm.SP_TRAN_FLAG = 0;
+
+                        Console.WriteLine("###掘金开仓中信: {0},时间 {1} 价格 {2} 数量 {3} 信号 {4}",
+                             bean.code, Convert.ToDateTime(tick.strtime).ToString("yyyy-MM-dd HH:MM:ss")
+                             , tick.ask_p2, buy_num, RiskMng.getXhDesc(bean.xh_type));
+                    }
+                }
+              
+
+                //概念集合
+                if (!JJUtil.dbGnsList.Contains(bean.gpInfo.gns))
+                {
+                    JJUtil.dbGnsList.Add(bean.gpInfo.gns);
                 }
 
-                double xk = bean.lastDailyBar.low; //下轨＝昨日低点
-                double openZf = (tick.open - bean.lastDailyBar.close) / bean.lastDailyBar.close * 100;
+                //买入更新仓位
+                GPUtil.updatePosition(1, bean.code, bean.xh_type, buy_num, tick.ask_p2, Convert.ToDateTime(tick.strtime), "0");
 
-                //当价格突破上轨，买入开仓               
-                if (tick.last_price > sk
-                    && tick.last_price < tick.high
-                    && bean.buy_cnt == 0
-                    && openZf < 0.15)
+                //重新查询
+                bean.positionDb = GPUtil.getPositionDb(bean.tick.sec_id);
+
+                JJUtil.dblog(6, "掘金开仓:" + bean.code + ",价格:" + tick.ask_p2
+                        + "数量:" + buy_num +
+                        ",信号:" + RiskMng.getXhDesc(bean.xh_type)
+                        , Convert.ToDateTime(tick.strtime));
+
+
+                //更新买入次数
+                bean.buy_cnt++;
+                strateSta.buy_cnt++;
+
+                Console.WriteLine("掘金开仓: {0},时间 {1} 价格 {2} 数量 {3} 信号 {4}",
+                   bean.code, Convert.ToDateTime(tick.strtime).ToString("yyyy-MM-dd HH:MM:ss")
+                   , tick.ask_p2, buy_num, RiskMng.getXhDesc(bean.xh_type));
+
+
+                //指标详细信息
+                if (MdComm.str_mode == 8)
                 {
-                    //买多
+                    //买入交易                
                     OpenLong(tick.exchange, tick.sec_id, tick.last_price, buy_num);
 
-                    if (MdComm.QH_SP_FLAG == 1)
-                    {
-                        lock (Locker2)
-                        {
-                            MdComm.SP_TRAN_FLAG = 1;
-                            PAQHApi.xiadan(kjj, "d", "b");
-                            MdComm.SP_TRAN_FLAG = 0;
-
-                            Console.WriteLine("###掘金开仓期货: {0},时间 {1} 价格 {2} 数量 {3} 信号 {4}",
-                                 bean.buyCode, Convert.ToDateTime(tick.strtime).ToString("yyyy-MM-dd HH:MM:ss")
-                                 , tick.ask_p2, 1, RiskMng.getXhDesc(bean.xh_type));
-                        }
-                    }
-
-                    //买入更新仓位
-                    GPUtil.updatePosition(1, tick.sec_id, 1, buy_num, tick.last_price, Convert.ToDateTime(tick.strtime), "0");
-
-                    //重新查询
-                    bean.positionDb = GPUtil.getPositionDb(bean.tick.sec_id);
-
-                    //更新买入次数
-                    bean.buy_cnt++;
-                    bean.b_buy_time = bean.btime;
-                    strateSta.buy_cnt++;
-
-                    Console.WriteLine("掘金开仓: {0},时间 {1} 价格 {2} 数量 {3} 信号 {4}",
-                                tick.sec_id, Convert.ToDateTime(tick.strtime).ToString("yyyy-MM-dd HH:mm:ss")
-                                , tick.last_price, 1, "买入开仓");
-
-
+                    HGStaUtil.insertGpZhiBiao(strateSta.dp, bean, 0);
                 }
-                else if (tick.last_price < xk
-                    && tick.last_price > tick.low
-                    && bean.buy_cnt == 0
-                    && bean.btime >= 9.30
-                    && openZf > -0.15) //当价格跌穿下轨，卖出开仓
-                {
-                    //开空
-                    OpenShort(tick.exchange, tick.sec_id, tick.last_price, buy_num);
-
-
-                    if (MdComm.QH_SP_FLAG == 1)
-                    {
-                        lock (Locker2)
-                        {
-                            MdComm.SP_TRAN_FLAG = 1;
-                            PAQHApi.xiadan(kjj, "k", "b");
-                            MdComm.SP_TRAN_FLAG = 0;
-                            Console.WriteLine("###掘金开仓期货: {0},时间 {1} 价格 {2} 数量 {3} 信号 {4}",
-                                 bean.buyCode, Convert.ToDateTime(tick.strtime).ToString("yyyy-MM-dd HH:MM:ss")
-                                 , tick.ask_p2, buy_num, RiskMng.getXhDesc(bean.xh_type));
-                        }
-                    }
-
-                    //买入更新仓位
-                    GPUtil.updatePosition(1, tick.sec_id, 2, buy_num, tick.last_price, Convert.ToDateTime(tick.strtime), "0");
-
-                    //重新查询
-                    bean.positionDb = GPUtil.getPositionDb(bean.tick.sec_id);
-
-                    //更新买入次数
-                    bean.buy_cnt++;
-                    bean.b_buy_time = bean.btime;
-                    strateSta.buy_cnt++;
-
-                    Console.WriteLine("掘金开仓: {0},时间 {1} 价格 {2} 数量 {3} 信号 {4}",
-                         tick.sec_id, Convert.ToDateTime(tick.strtime).ToString("yyyy-MM-dd HH:MM:ss")
-                         , tick.last_price, buy_num, "卖出开仓");
-                }
-
             }
             #endregion
-        
 
         }
 

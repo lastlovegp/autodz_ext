@@ -59,12 +59,13 @@ namespace MdTZ
             double low_3_price = 0;
             double low_5_price = 0;
             double low_10_price = 0;
+            double low_20_price = 0;
             double low_30_price = 0;
             double low_60_price = 0;
 
             double top_2_price = 0;
             double top_5_price = 0;
-            double top_60_price = 0;
+            double top_3_price = 0;
 
             double sum_price = 0;
             double pre_sum_price = 0;
@@ -168,12 +169,13 @@ namespace MdTZ
                 low_3_price = 0;
                 low_5_price = 0;
                 low_10_price = 0;
+                low_20_price = 0;
                 low_30_price = 0;
                 low_60_price = 0;
 
                 top_2_price = 0;
                 top_5_price = 0;
-                top_60_price = 0;
+                top_3_price = 0;
 
                 pre_sum_price = 0;
                 sum_price = 0;
@@ -350,6 +352,7 @@ namespace MdTZ
 
                             low_3_amt = lowest_amt;
                             low_3_price = lowest_price;
+                            top_3_price = Math.Round(highest_price, 2);
 
                             zf_sum_3 = sum_zf;
 
@@ -393,13 +396,12 @@ namespace MdTZ
                         else if (idx == 20)
                         {
                             jj_20 = Math.Round(sum_price / idx, 2);
+                            low_20_price = lowest_price;
                         }
                         else if (idx == 24)
                         {
                             rsi24 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
-
                         }
-
                         else if (idx == 30)
                         {
                             jj_30 = Math.Round(sum_price / idx, 2);
@@ -408,7 +410,6 @@ namespace MdTZ
 
                             zf_sum_30 = sum_zf;
                             sum_30_amt = sum_amt;
-
                         }
                         else if (idx == 60)
                         {
@@ -418,9 +419,7 @@ namespace MdTZ
 
                             rsi60 = Math.Round(sum_rsi_zf / (sum_rsi_zf + Math.Abs(sum_rsi_df)), 2) * 100;
 
-                            atr = Math.Round(sum_atr / idx, 2);
-
-                            top_60_price = Math.Round(highest_price, 2);
+                            atr = Math.Round(sum_atr / idx, 2);                         
 
                             sum_60_amt = sum_amt;
 
@@ -624,7 +623,7 @@ namespace MdTZ
 
                             atr = Math.Round(sum_atr / idx, 2);
 
-                            top_60_price = Math.Round(highest_price, 2);
+                            top_3_price = Math.Round(highest_price, 2);
 
                             sum_60_amt = sum_amt;
 
@@ -668,14 +667,24 @@ namespace MdTZ
                         .Append(jj_60)                       
                         .Append(",zr_cjl=")
                         .Append(last_amt)
+                        .Append(",low_3=")
+                        .Append(low_3_price)
                         .Append(",low_5=")
                         .Append(low_5_price)
+                        .Append(",low_10=")
+                        .Append(low_10_price)
+                        .Append(",low_20=")
+                        .Append(low_20_price)
+                        .Append(",low_30=")
+                        .Append(low_30_price)
+                        .Append(",low_60=")
+                        .Append(low_60_price)
                         .Append(",top_2=")
                         .Append(top_2_price)
                         .Append(",top_5=")
                         .Append(top_5_price)
-                        .Append(",top_60=")
-                        .Append(top_60_price)
+                        .Append(",top_3=")
+                        .Append(top_3_price)
                         .Append(",zf_rec=REVERSE('")
                         .Append(zfRec)
                         .Append("'),rsi_6=")
@@ -687,9 +696,7 @@ namespace MdTZ
                         .Append(",zf=")
                         .Append(HGStaUtil.getBarZF(curBar))
                         .Append(",zf2=")
-                        .Append(zf_sum_2)
-                        .Append(",low_3=")
-                        .Append(low_3_price)
+                        .Append(zf_sum_2)                      
                         .Append(",qt_pre_close=")
                         .Append(qt_pre_close)
                         .Append(",zf10=")

@@ -36,7 +36,8 @@ namespace MdTZ
         /// </summary>
         /// <param name="tick"></param>
         public override void OnTick(Tick tick)
-        {
+        {           
+
             #region 策略初始化       
             //时间控制下
             DateTime t_time = Convert.ToDateTime(tick.strtime);          
@@ -121,7 +122,7 @@ namespace MdTZ
                 && tick.exchange != null               
                 && tick.last_price > 0  
                 && bean.btime >= 9.05
-                && bean.btime <= 15.00
+                && bean.btime <= 14.58
                 && bean.btime - bean.b_buy_time >= 0.5
                 )
             {
@@ -132,6 +133,13 @@ namespace MdTZ
                 if (bean.positionDb.inxh == 2
                  && bean.lastDailyBar.close >= bean.gpTotal.top_5_day
                  && bean.gpTotal.sum30Zf > 12)
+                {
+                    zs = -2;
+                }
+
+                if (bean.positionDb.inxh == 2
+                   && bean.gpTotal.sum10Zf > 7
+                   && bean.gpTotal.sum30Zf > 18)
                 {
                     zs = -2;
                 }
@@ -226,7 +234,7 @@ namespace MdTZ
 
                     #region 反手做空
                     if (bean.positionDb.inxh == 1
-                        && bean.lastDailyBar.close >= bean.gpTotal.top_20_day
+                        && bean.lastDailyBar.close >= bean.gpTotal.top_3_day
                         && bean.gpTotal.sum30Zf > 10
                         && bean.btime <= 14.10
                         && default_zs)
@@ -305,7 +313,7 @@ namespace MdTZ
                     && bean.gpTotal.sum30Zf < 14
                     && bean.btime >= (bean.tick.last_price > bean.gpTotal.top_5_day && bean.gpTotal.sum30Zf > 10 ? 11.10 : 9.03)
                     && bean.btime >= (bean.tick.last_price > bean.gpTotal.top_5_day && bean.gpTotal.sum30Zf >= 7 ? 9.30 : 9.03)
-                    && (bean.tick.last_price - bean.lastDailyBar.high) / bean.lastDailyBar.high * 100 < 0.2
+                    && (bean.tick.last_price - bean.lastDailyBar.high) / bean.lastDailyBar.high * 100 < 0.4
                     && openZf < 0.15)
                 {                    
                     //买多
@@ -350,8 +358,8 @@ namespace MdTZ
                 else if (tick.last_price < xk 
                     && tick.last_price > tick.low  
                     && bean.buy_cnt == 0
-                    && bean.btime >= 9.30
-                    && (bean.lastDailyBar.low - bean.tick.last_price) / bean.lastDailyBar.low * 100 < 0.2
+                    && bean.btime >= 9.30                    
+                    && (bean.lastDailyBar.low - bean.tick.last_price) / bean.lastDailyBar.low * 100 < 0.4
                     && openZf > -0.15) //当价格跌穿下轨，卖出开仓
                 {                    
                     //开空
@@ -402,7 +410,293 @@ namespace MdTZ
         /// <param name="bar"></param>
         public override void OnBar(Bar bar)
         {
-            return;
+
+            if (1 == 1)
+            {
+                return;
+            }
+           
+            #region 策略初始化
+            //时间控制下
+            DateTime t_time = Convert.ToDateTime(bar.strtime);
+
+            //获取封装过的bean
+            BarTotal bean = null;
+            try
+            {
+                 bean = HGStaUtil.getBarTotal(this, barDic, bar, strateSta);
+                //大盘指数的时候过滤掉
+                if (bean == null)
+                {
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+                return;
+            }
+
+            if (bean.isDp)
+            {
+                return;
+            }
+
+            //tick时间
+            double btime = bean.btime;
+            //快捷键
+            String kjj = "";
+            if (bar.sec_id.Equals("RB"))
+            {
+                kjj = "1";
+            }
+            else if (bar.sec_id.Equals("JM"))
+            {
+                kjj = "2";
+            }
+            else if (bar.sec_id.Equals("J"))
+            {
+                kjj = "3";
+            }
+            else if (bar.sec_id.Equals("I"))
+            {
+                kjj = "4";
+            }
+
+            #region 仓位初始化
+            if (bean != null && bean.gpTotal != null)
+            {
+                //最小买入单位
+                bean.gpTotal.minUnit = 1;
+
+                //本地仓库（数据库)           
+                if (bean.positionDb != null && bean.positionDb.available > 0)
+                {
+                    if (bean.positionDb.vwap > 0 && bar.close > 0)
+                    {
+                        //盈亏率
+                        if (bean.positionDb.inxh == 1)
+                        {
+                            bean.ykl = Math.Round((bar.close - bean.positionDb.vwap) / bean.positionDb.vwap * 100, 2);
+                        }
+                        else if (bean.positionDb.inxh == 2)
+                        {
+                            bean.ykl = Math.Round((bean.positionDb.vwap - bar.close) / bar.close * 100, 2);
+                        }
+                    }
+                    else
+                    {
+                        bean.ykl = 0;
+                    }
+                }
+            }
+            #endregion
+
+            #endregion
+
+            #region 止盈止损
+            //止盈止损
+            if (bean.positionDb != null
+                && bean.positionDb.available > 0
+                && bar.exchange != null
+                && bar.close > 0
+                && bean.btime >= 9.05
+                && bean.btime <= 15.00                
+                )
+            {
+                //设置止盈止损               
+                double zy = 1;
+                double zs = -1;
+
+                if (bean.positionDb.inxh == 2
+                 && bean.lastDailyBar.close >= bean.gpTotal.top_5_day
+                 && bean.gpTotal.sum30Zf > 12)
+                {
+                    zs = -2;
+                }
+
+                bool default_zs = bean.ykl < zs;
+                bool default_zy = bean.ykl > zy;
+
+                //日内最后清仓
+                if (bean.btime >= 14.55)
+                {
+                    default_zy = true;
+                }
+
+                if (bean.ykl >= 0.4
+                    && bean.lastDailyBar.close >= bean.gpTotal.top_5_day
+                    && bean.gpTotal.sum30Zf > 10
+                    && (bar.high - bar.close) / bar.high * 100 >= 0.1)
+                {
+                    default_zy = true;
+                }
+
+                //兜底的止损强制止益--保险丝
+                if (default_zy || default_zs)
+                {
+                    //卖出多仓
+                    if (bean.positionDb.inxh == 1)
+                    {
+                        CloseLong(bar.exchange, bar.sec_id, bar.close, 1);
+                    }
+                    else
+                    {
+                        CloseShort(bar.exchange, bar.sec_id, bar.close, 1);
+                    }             
+
+                    //卖出更新仓位                   
+                    GPUtil.updatePosition(-1, bar.sec_id, bean.positionDb.inxh, 1, bar.close, Convert.ToDateTime(bar.strtime), "0");
+
+                    //头寸更新
+                    if (bean.positionDb != null)
+                    {
+                        Console.WriteLine("卖出: {0},时间 {1} 买入 {2} 价格 {3} 数量 {4} 盈亏率 {5} 信号 {6}",
+                                bar.sec_id,
+                                Convert.ToDateTime(bar.strtime).ToString("yyyy-MM-dd HH:MM:ss"),
+                                bean.positionDb.vwap, bar.close, bean.positionDb.can_tran_dw, bean.ykl, "止盈止损");
+
+                        if (MdComm.str_mode == 2)
+                        {
+                            JJUtil.dblog(5, "掘金卖出:" + bar.sec_id + "成本价:"
+                               + bean.positionDb.vwap + ",价格:" + bar.close + " 数量:" + bean.positionDb.can_tran_dw + ",信号:止盈止损"
+                               , Convert.ToDateTime(bar.strtime));
+                        }
+                    }
+
+                    //指标详细信息
+                    if (MdComm.str_mode == 4 && bean.sell_cnt == 0)
+                    {                       
+                        if (bean.ykl < 0)
+                        {
+                            JJUtil.loadGpBarList(bar.exchange + "." + bar.sec_id, 1, Convert.ToDateTime(bar.strtime).AddMinutes(-500).ToString("yyyy-MM-dd HH:MM:ss")
+                                , Convert.ToDateTime(bar.strtime).AddMinutes(500).ToString("yyyy-MM-dd HH:MM:ss"));
+                        }
+
+                    }
+
+                    //本地库
+                    bean.positionDb = GPUtil.getPositionDb(bean.code);
+
+                    //累计卖出次数
+                    bean.sell_cnt++;
+
+                    #region 反手做空
+                    if (bean.positionDb.inxh == 1
+                        && bean.lastDailyBar.close >= bean.gpTotal.top_3_day
+                        && bean.gpTotal.sum30Zf > 10
+                        && bean.btime <= 14.10
+                        && default_zs)
+                    {
+                        bean.buy_cnt = 0;
+                        bean.sell_cnt = 0;
+
+                        //开空单                       
+                        OpenShort(bar.exchange, bar.sec_id, bar.close, 1);
+
+                        //买入更新仓位
+                        GPUtil.updatePosition(1, bar.sec_id, 2, 1, bar.close, Convert.ToDateTime(bar.strtime), "0");
+
+                        //重新查询
+                        bean.positionDb = GPUtil.getPositionDb(bar.sec_id);
+
+                        //更新买入次数
+                        bean.buy_cnt++;                        
+                        strateSta.buy_cnt++;
+
+                        Console.WriteLine("掘金开仓: {0},时间 {1} 价格 {2} 数量 {3} 信号 {4}",
+                             bar.sec_id, Convert.ToDateTime(bar.strtime).ToString("yyyy-MM-dd HH:MM:ss")
+                             , bar.close, 1, "卖出开仓");
+
+                    }
+                    #endregion
+
+                }
+
+            }
+
+            #endregion
+
+            #region 开仓
+            //开仓
+            if (bar.close > 0
+                && (bean.positionDb == null || bean.positionDb.available == 0)
+                && bean.lastDailyBar != null && bar.exchange != null
+                && bean.btime >= 9.03
+                && bean.btime <= 14.30
+                )
+            {
+                //实盘仓位数
+                int buy_num = 1;
+                double zrzf = HGStaUtil.getBarZF(bean.lastDailyBar);
+                double sk = bean.lastDailyBar.high; //上轨＝昨日高点
+                if (zrzf > -0.5 && zrzf < 0.5
+                    && bean.lastDailyBar.close <= bean.gpTotal.low_5_day
+                )
+                {
+                    sk = bean.lastDailyBar.close;
+                }
+
+                double xk = bean.lastDailyBar.low; //下轨＝昨日低点
+                double openZf = (bar.open - bean.lastDailyBar.close) / bean.lastDailyBar.close * 100;
+
+                //当价格突破上轨，买入开仓               
+                if (bar.close > sk
+                    && bar.close < bar.high
+                    && bean.buy_cnt == 0
+                    && bean.gpTotal != null
+                    && bean.gpTotal.sum30Zf < 14
+                    && bean.btime >= (bar.close > bean.gpTotal.top_5_day && bean.gpTotal.sum30Zf > 10 ? 11.10 : 9.03)
+                    && bean.btime >= (bar.close > bean.gpTotal.top_5_day && bean.gpTotal.sum30Zf >= 7 ? 9.30 : 9.03)
+                    && (bar.close - bean.lastDailyBar.high) / bean.lastDailyBar.high * 100 < 0.4
+                    && openZf < 0.15)
+                {
+                    //买多
+                    OpenLong(bar.exchange, bar.sec_id, bar.close, buy_num);
+
+                    //买入更新仓位
+                    GPUtil.updatePosition(1, bar.sec_id, 1, buy_num, bar.close, Convert.ToDateTime(bar.strtime), "0");
+
+                    //重新查询
+                    bean.positionDb = GPUtil.getPositionDb(bar.sec_id);
+
+                    //更新买入次数
+                    bean.buy_cnt++;                    
+                    strateSta.buy_cnt++;
+
+                    Console.WriteLine("掘金开仓: {0},时间 {1} 价格 {2} 数量 {3} 信号 {4}",
+                                bar.sec_id, Convert.ToDateTime(bar.strtime).ToString("yyyy-MM-dd HH:mm:ss")
+                                , bar.close, 1, "买入开仓");
+
+
+                }
+                else if (bar.close < xk
+                    && bar.close > bar.low
+                    && bean.buy_cnt == 0
+                    && bean.btime >= 9.30
+                    && (bean.lastDailyBar.low - bar.close) / bean.lastDailyBar.low * 100 < 0.4
+                    && openZf > -0.15) //当价格跌穿下轨，卖出开仓
+                {
+                    //开空
+                    OpenShort(bar.exchange, bar.sec_id, bar.close, buy_num);
+
+                    //买入更新仓位
+                    GPUtil.updatePosition(1, bar.sec_id, 2, buy_num, bar.close, Convert.ToDateTime(bar.strtime), "0");
+
+                    //重新查询
+                    bean.positionDb = GPUtil.getPositionDb(bar.sec_id);
+
+                    //更新买入次数
+                    bean.buy_cnt++;                    
+                    strateSta.buy_cnt++;
+
+                    Console.WriteLine("掘金开仓: {0},时间 {1} 价格 {2} 数量 {3} 信号 {4}",
+                         bar.sec_id, Convert.ToDateTime(bar.strtime).ToString("yyyy-MM-dd HH:MM:ss")
+                         , bar.close, buy_num, "卖出开仓");
+                }
+
+            }
+            #endregion
         }
 
         #region 非主要事件

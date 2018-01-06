@@ -36,6 +36,8 @@ namespace MdTZ
         public const string SZ_JJ_CODE = "SHSE.000001";
 
         public static bool isTraning = false;
+
+       
        
 
         #endregion
@@ -506,6 +508,7 @@ namespace MdTZ
                 {
                     total.sum3Zf = Math.Round(sum_zf, 2);
                     total.low_3_day = Math.Round(low_5_price, 2);
+                    total.top_3_day = Math.Round(top_5_price, 2);  
 
                 }
                 else if (cnt == 4)
@@ -556,8 +559,7 @@ namespace MdTZ
                     total.low_20_day = Math.Round(low_5_price, 2);
                     total.atr = Math.Round(atr / cnt, 2);
 
-                    total.top_20_day_date = top_5_price_date;
-                    total.top_20_day = Math.Round(top_5_price, 2);              
+                    total.top_20_day_date = top_5_price_date;                               
                     total.low_cjl_20_day = low_cjl;
                     total.sum20Zf = Math.Round(sum_zf, 2);
                 }
@@ -1033,13 +1035,13 @@ namespace MdTZ
                             {
                                 GPUtil.helper.ExecuteNonQuery("UPDATE POSITION SET sumzf=("
                                    + bean.tick.pre_close
-                                   + "-position.vwap)/position.vwap*100 WHERE code='" + tick.sec_id + "' and available > 0");
+                                   + "-position.vwap)/position.vwap*100 WHERE code='" + tick.sec_id + "' and available > 0 and vwap > 0");
                             }
                             else if (bean.positionDb.inxh == 2)
                             {
                                 GPUtil.helper.ExecuteNonQuery("UPDATE POSITION SET sumzf=("                                 
                                   + "position.vwap -"+ bean.tick.pre_close
-                                  + ")/position.vwap*100 WHERE code='" + tick.sec_id + "' and available > 0");
+                                  + ")/position.vwap*100 WHERE code='" + tick.sec_id + "' and available > 0 and vwap > 0");
                             }
                            
                         }
@@ -1214,32 +1216,12 @@ namespace MdTZ
                  }                          
 
                //插入数据库日志
-               if ((MdComm.str_mode == 6 || MdComm.str_mode == 7) && bean.seq % 60 == 0)
+               if ((MdComm.str_mode == 6 || MdComm.str_mode == 2) && bean.seq % 60 == 0)
                {
                    JJUtil.dblog(0, "模式[" + MdComm.TRAN_MODE + "] 获取tick信息[" + tick.sec_id
                        + "],方向[" + MdComm.IN_TYPE + "]", Convert.ToDateTime(tick.strtime));
                }
-            }
-            else if (sta.dp == null && bean.code.Equals("RB"))
-            {
-                if (bean.seq % 600 == 0)
-                {
-                    Console.WriteLine("趋势: {0} 方向: {1}: 时间={2} 代码={3} 指数={4} 最低={5}", MdComm.TRAN_MODE,
-                        MdComm.IN_TYPE,
-                        Convert.ToDateTime(tick.strtime).ToString("yyyy-MM-dd HH:mm:ss"),
-                        tick.sec_id,
-                        tick.last_price,
-                        tick.low);
-                }
-
-                //插入数据库日志
-                if ((MdComm.str_mode == 2 || MdComm.str_mode == 3 
-                    || MdComm.str_mode == 6 || MdComm.str_mode == 7) && bean.seq % 60 == 0)
-                {
-                    JJUtil.dblog(0, "模式[" + MdComm.TRAN_MODE + "] 获取tick信息[" + tick.sec_id
-                        + "],方向[" + MdComm.IN_TYPE + "]", Convert.ToDateTime(tick.strtime));
-                }
-            }           
+            }     
 
             return bean;
         }
@@ -1254,6 +1236,7 @@ namespace MdTZ
         public static BarTotal getBarTotal(Strategy strat,Dictionary<string, BarTotal> barDic, Bar bar, StrateSta sta)
         {
             BarTotal bean = null;
+            DateTime t_tran_time;
             if (barDic.ContainsKey(bar.sec_id))
             {
                 bean = barDic[bar.sec_id];
@@ -1272,16 +1255,33 @@ namespace MdTZ
                      bean.sell_cnt = 0;
                      bean.high = Math.Round(bar.high, 2);
                      bean.low = Math.Round(bar.low, 2);
-                     bean.strtime = bar.strtime;                  
+                     bean.strtime = bar.strtime;
 
-                     //重新获取
-                     List<DailyBar> bars = strat.GetLastNDailyBars(bar.exchange+"."+bar.sec_id,
-                            2, Convert.ToDateTime(bean.strtime).AddDays(-1).ToString("yyyy-MM-dd HH:MM:ss"));
-                     if (bars != null && bars.Count >= 2)
+                     //昨日bar
+                     List<DailyBar> bars = null;
+                     t_tran_time = Convert.ToDateTime(bar.strtime); 
+
+                     if (bar.sec_id.Length == 6)
                      {
-                         bean.qtDailyBar = bars[1];
-                         bean.lastDailyBar = bars[0];                        
+                         bars = strat.GetLastNDailyBars(bar.exchange + "." + bar.sec_id,
+                             2, Convert.ToDateTime(bean.strtime).AddDays(-1).ToString("yyyy-MM-dd HH:MM:ss"));
+                         if (bars != null && bars.Count >= 2)
+                         {
+                             bean.qtDailyBar = bars[1];
+                             bean.lastDailyBar = bars[0];
+                         }
                      }
+                     else
+                     {                
+                         //昨日bar
+                         bars = MdComm.md.GetDailyBars(bar.exchange + "." + bar.sec_id,
+                               t_tran_time.AddDays(-20).ToString("yyyy-MM-dd HH:MM:ss"), t_tran_time.ToString("yyyy-MM-dd HH:MM:ss"));
+                         if (bars != null && bars.Count >= 3)
+                         {
+                             bean.lastDailyBar = bars[bars.Count - 2];
+                             bean.qtDailyBar = bars[bars.Count - 3];
+                         }
+                     } 
 
                      //重新加载统计信息
                      loadGpTotalList(strat, bar.exchange + "." + bar.sec_id, bar.strtime, bar.strtime);
@@ -1335,15 +1335,36 @@ namespace MdTZ
                 bean.positionDb = GPUtil.getPositionDb(bean.code);
 
                 //前一天日bar
-                List<DailyBar> bars = strat.GetLastNDailyBars(bar.exchange + "." + bar.sec_id,
-                            2, Convert.ToDateTime(bean.strtime).AddDays(-1).ToString("yyyy-MM-dd HH:MM:ss"));
-                if (bars != null && bars.Count >= 2)
+                //昨日bar
+                List<DailyBar> bars = null;
+                t_tran_time = Convert.ToDateTime(bar.strtime);
+                if (bar.sec_id.Length == 6)
                 {
-                    bean.qtDailyBar = bars[1];
-                    bean.lastDailyBar = bars[0];
+                    bars = strat.GetLastNDailyBars(bar.exchange + "." + bar.sec_id,
+                        2, Convert.ToDateTime(bean.strtime).AddDays(-1).ToString("yyyy-MM-dd HH:MM:ss"));
+                    if (bars != null && bars.Count >= 2)
+                    {
+                        bean.qtDailyBar = bars[1];
+                        bean.lastDailyBar = bars[0];
+                    }
+                }
+                else
+                {
+                    //昨日bar
+                    bars = MdComm.md.GetDailyBars(bar.exchange + "." + bar.sec_id,
+                          t_tran_time.AddDays(-20).ToString("yyyy-MM-dd HH:MM:ss"), t_tran_time.ToString("yyyy-MM-dd HH:MM:ss"));
+                    if (bars != null && bars.Count >= 3)
+                    {
+                        bean.lastDailyBar = bars[bars.Count - 2];
+                        bean.qtDailyBar = bars[bars.Count - 3];
+                    }
+                } 
+
+                if (bean.lastDailyBar != null)
+                {
                     bean.zf = Math.Round((bean.close - bean.lastDailyBar.close) / bean.lastDailyBar.close * 100, 2);
-                }               
-               
+                }
+                               
                 barDic.Add(bean.code, bean);
             }
 
@@ -1358,9 +1379,9 @@ namespace MdTZ
             } 
 
             //测试用
-            if (bean.isDp || bean.code.Equals("RB"))
+            if (bean.isDp)
             {
-                if (bean.seq % (MdComm.str_mode == 2 || MdComm.str_mode == 6 ? 120 : 240) == 0)
+                if (bean.seq % 5 == 0)
                 {
                     Console.WriteLine("趋势: {0} 方向: {1}: 时间={2} 代码={3} 指数={4} 最低={5}", MdComm.TRAN_MODE,
                         MdComm.IN_TYPE,
@@ -1371,12 +1392,12 @@ namespace MdTZ
                 }
 
                 //插入数据库日志
-                if ((MdComm.str_mode == 2 || MdComm.str_mode == 3 || MdComm.str_mode == 6 || MdComm.str_mode == 7) && bean.seq % 60 == 0)
+                if ((MdComm.str_mode == 2 || MdComm.str_mode == 3 || MdComm.str_mode == 6 || MdComm.str_mode == 7) && bean.seq % 5 == 0)
                 {
                     JJUtil.dblog(0, "模式[" + MdComm.TRAN_MODE + "] 获取tick信息[" + bar.sec_id
                         + "],方向[" + MdComm.IN_TYPE + "]", Convert.ToDateTime(bar.strtime));
                 }
-            }        
+            }               
             
             return bean;
         }           
